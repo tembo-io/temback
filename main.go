@@ -36,33 +36,21 @@ func main() {
 }
 
 type Config struct {
-	OrgID    string
-	InstID   string
-	InstName string
-	DBHost   string
-	DBUser   string
-	DBPass   string
-	Bucket   string
-	Plain    bool
-}
-
-func (c *Config) DumpDir() string {
-	return fmt.Sprintf("%v-%v-%v", c.OrgID, c.InstID, c.InstName)
+	Name   string
+	DBHost string
+	DBUser string
+	DBPass string
+	Bucket string
+	Plain  bool
 }
 
 func (c *Config) Tarball() string {
-	return c.DumpDir() + ".tar.gz"
-}
-
-func (c *Config) UploadURL() string {
-	return fmt.Sprintf("%v/%v", c.Bucket, c.Tarball())
+	return c.Name + ".tar.gz"
 }
 
 func newConfig() *Config {
 	cfg := new(Config)
-	flag.StringVar(&cfg.OrgID, "org-id", "", "Organization ID")
-	flag.StringVar(&cfg.InstID, "inst-id", "", "Instance ID")
-	flag.StringVar(&cfg.InstName, "inst-name", "", "Instance Name")
+	flag.StringVar(&cfg.Name, "name", "", "Backup name")
 	flag.StringVar(&cfg.DBHost, "host", os.Getenv("PGHOST"), "Database host name")
 	flag.StringVar(&cfg.DBUser, "user", os.Getenv("PGUSER"), "Database username")
 	flag.StringVar(&cfg.DBPass, "pass", os.Getenv("PGPASSWORD"), "Database password")
@@ -70,8 +58,7 @@ func newConfig() *Config {
 	flag.BoolVar(&cfg.Plain, "text", false, "Plain text format")
 
 	flag.Parse()
-	if cfg.OrgID == "" || cfg.InstID == "" || cfg.InstName == "" ||
-		cfg.DBHost == "" || cfg.DBUser == "" || cfg.DBPass == "" ||
+	if cfg.Name == "" || cfg.DBHost == "" || cfg.DBUser == "" || cfg.DBPass == "" ||
 		cfg.Bucket == "" {
 		usage()
 	}
@@ -111,8 +98,7 @@ func list_databases(cfg *Config) ([]string, error) {
 }
 
 func dump(cfg *Config, dbs []string) error {
-	dir := cfg.DumpDir()
-	if err := os.MkdirAll(dir, 0750); err != nil {
+	if err := os.MkdirAll(cfg.Name, 0750); err != nil {
 		return err
 	}
 
@@ -127,11 +113,11 @@ func dump(cfg *Config, dbs []string) error {
 	jobs = append(jobs,
 		Job{
 			name: "roles",
-			cmd:  exec.Command("pg_dumpall", "-r", "-f", path.Join(dir, "roles.sql")),
+			cmd:  exec.Command("pg_dumpall", "-r", "-f", path.Join(cfg.Name, "roles.sql")),
 		},
 		Job{
 			name: "tablespaces",
-			cmd:  exec.Command("pg_dumpall", "-t", "-f", path.Join(dir, "tablespaces.sql")),
+			cmd:  exec.Command("pg_dumpall", "-t", "-f", path.Join(cfg.Name, "tablespaces.sql")),
 		},
 	)
 
@@ -153,7 +139,7 @@ func dump(cfg *Config, dbs []string) error {
 				name: db + " database",
 				cmd: exec.Command(
 					"pg_dump",
-					slices.Concat(args, []string{path.Join(dir, "db-"+db+ext), db})...,
+					slices.Concat(args, []string{path.Join(cfg.Name, "db-"+db+ext), db})...,
 				),
 			},
 		)
@@ -194,14 +180,12 @@ func dump(cfg *Config, dbs []string) error {
 }
 
 func compress(cfg *Config) error {
-	dir := cfg.DumpDir()
 	file := cfg.Tarball()
 	fmt.Printf("Archiving %v\n", file)
-	return targz.Compress(dir, file)
+	return targz.Compress(cfg.Name, file)
 }
 
 func upload(cfg *Config) error {
-	key := cfg.DumpDir()
 	file := cfg.Tarball()
 	fmt.Printf("Uploading %v...", file)
 
@@ -221,7 +205,7 @@ func upload(cfg *Config) error {
 
 	if _, err := client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:            aws.String(cfg.Bucket),
-		Key:               aws.String(key),
+		Key:               aws.String(cfg.Name),
 		Body:              fh,
 		ChecksumAlgorithm: types.ChecksumAlgorithmSha256,
 		ContentType:       aws.String("application/gzip"),

@@ -7,10 +7,10 @@ to S3.
 ```sh
 go run . --help
 
-env PGHOST=watchfully-respectful-emperor.data-1.use1.tembo.io \
+env PGHOST=postgres.example.org \
     PGUSER=postgres \
-    PGPASSWORD=FH0oFZliXDesUcAH \
-go run . --name org_xyz-inst_abc-my_db --bucket tembo-backup-use1-dev
+    PGPASSWORD=XXXXXXX \
+go run . --name org_xyz-inst_abc-my_db --bucket my-backup-database
 ```
 
 Options

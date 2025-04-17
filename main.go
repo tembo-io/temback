@@ -33,6 +33,7 @@ func main() {
 	h(dump(cfg, dbs))
 	h(compress(cfg))
 	h(upload(cfg))
+	h(cleanup(cfg))
 }
 
 type Config struct {
@@ -42,6 +43,7 @@ type Config struct {
 	DBPass string
 	Bucket string
 	Plain  bool
+	Clean  bool
 }
 
 func (c *Config) Tarball() string {
@@ -56,6 +58,7 @@ func newConfig() *Config {
 	flag.StringVar(&cfg.DBPass, "pass", os.Getenv("PGPASSWORD"), "Database password")
 	flag.StringVar(&cfg.Bucket, "bucket", "", "S3 bucket name")
 	flag.BoolVar(&cfg.Plain, "text", false, "Plain text format")
+	flag.BoolVar(&cfg.Clean, "clean", false, "Delete files after upload")
 
 	flag.Parse()
 	if cfg.Name == "" || cfg.DBHost == "" || cfg.DBUser == "" || cfg.DBPass == "" ||
@@ -214,5 +217,20 @@ func upload(cfg *Config) error {
 		return err
 	}
 	fmt.Println("Done!")
+	return nil
+}
+
+func cleanup(cfg *Config) error {
+	if !cfg.Clean {
+		return nil
+	}
+	fmt.Print("Cleaning up...")
+	for _, path := range []string{cfg.Tarball(), cfg.Name} {
+		if err := os.RemoveAll(path); err != nil {
+			fmt.Println()
+			return err
+		}
+	}
+	fmt.Println("Done")
 	return nil
 }

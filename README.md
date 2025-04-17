@@ -64,5 +64,6 @@ Options
 *   `--pass`: The Postgres password; defaults to `$PGPASSWORD` (preferred)
 *   `--bucket`: The S3 bucket name
 *   `--text`: Dump plain text
+*   `--clean`: Delete files
 
 [`pg_dump`]: https://www.postgresql.org/docs/current/app-pgdump.html

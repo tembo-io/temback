@@ -1,4 +1,4 @@
-name: 🏗️ Build and Run
+name: 🛠️ Build and Run
 on:
   push:
 jobs:

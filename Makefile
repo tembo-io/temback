@@ -1,8 +1,13 @@
 VERSION  := v0.0.1-dev
-ldflags = -ldflags="-s -w -X 'main.version=$(VERSION)' -X 'main.build=$(shell git rev-parse --short HEAD)'"
+REVISION := $(shell git rev-parse --short HEAD)
+REGISTRY ?= localhost:5001
+ldflags = -ldflags="-s -w -X 'main.version=$(VERSION)' -X 'main.build=$(REVISION)'"
 
 temback: main.go go.*
 	go build $(ldflags) -o $@ .
+
+image: temback
+	registry=$(REGISTRY) version=$(VERSION) revision=$(REVISION) docker buildx bake $(if $(filter true,$(PUSH)),--push,)
 
 .PHONY: clean # Remove generated files
 clean:
@@ -21,5 +26,3 @@ lint: .pre-commit-config.yaml .golangci.yaml
 .PHONY: debian-lint-depends # Install linting tools on Debian
 debian-lint-depends:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sudo sh -s -- -b /usr/bin v2.1.2
-	sudo curl -Lo /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
-	sudo chmod +x /bin/hadolint

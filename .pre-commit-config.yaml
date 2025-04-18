@@ -15,11 +15,6 @@ repos:
 
   - repo: local
     hooks:
-      - id: hadolint
-        name: Dockerfile linting
-        entry: hadolint
-        language: system
-        types: [dockerfile]
       - id: go-mod-tidy
         name: Go mod tidy
         language: system

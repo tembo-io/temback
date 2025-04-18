@@ -22,6 +22,12 @@ import (
 	"github.com/walle/targz"
 )
 
+//nolint:gochecknoglobals
+var (
+	version = "dev"
+	build   = "HEAD"
+)
+
 func h(err error) {
 	const errExitCode = 2
 	if err != nil {
@@ -72,7 +78,14 @@ func newConfig() *backupConfig {
 	flag.BoolVar(&cfg.plain, "text", false, "Plain text format")
 	flag.BoolVar(&cfg.clean, "clean", false, "Delete files after upload")
 
+	printVersion := flag.Bool("version", false, "Print version")
+
 	flag.Parse()
+	if *printVersion {
+		fmt.Printf("%v %v (%v)\n", filepath.Base(os.Args[0]), version, build)
+		os.Exit(0)
+	}
+
 	if cfg.name == "" || cfg.host == "" || cfg.user == "" || cfg.pass == "" ||
 		cfg.bucket == "" {
 		usage()

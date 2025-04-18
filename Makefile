@@ -1,3 +1,9 @@
+VERSION  := v0.0.1-dev
+ldflags = -ldflags="-s -w -X 'main.version=$(VERSION)' -X 'main.build=$(shell git rev-parse --short HEAD)'"
+
+temback: main.go go.*
+	go build $(ldflags) -o $@ .
+
 .PHONY: clean # Remove generated files
 clean:
 	$(GO) clean

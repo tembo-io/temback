@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"flag"
 	"fmt"
 	"os"
@@ -9,6 +10,8 @@ import (
 	"path"
 	"path/filepath"
 	"slices"
+	"text/template"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -28,9 +31,10 @@ func h(err error) {
 func main() {
 	cfg := newConfig()
 
-	dbs, err := list_databases(cfg)
+	info, err := get_db_info(cfg)
 	h(err)
-	h(dump(cfg, dbs))
+	h(dump(cfg, info))
+	h(add_readme(cfg, info))
 	h(compress(cfg))
 	h(upload(cfg))
 	h(cleanup(cfg))
@@ -44,6 +48,12 @@ type Config struct {
 	Bucket string
 	Plain  bool
 	Clean  bool
+	Time   time.Time
+}
+
+type DBInfo struct {
+	version string
+	dbs     []string
 }
 
 func (c *Config) Tarball() string {
@@ -51,7 +61,7 @@ func (c *Config) Tarball() string {
 }
 
 func newConfig() *Config {
-	cfg := new(Config)
+	cfg := &Config{Time: time.Now().UTC()}
 	flag.StringVar(&cfg.Name, "name", "", "Backup name")
 	flag.StringVar(&cfg.DBHost, "host", os.Getenv("PGHOST"), "Database host name")
 	flag.StringVar(&cfg.DBUser, "user", os.Getenv("PGUSER"), "Database username")
@@ -71,36 +81,46 @@ func newConfig() *Config {
 
 func usage() {
 	fmt.Printf(
-		"Usage:\n  %v --org-id [ORG_ID] --inst-id [INST_ID] --inst-name [NAME] --conn [URI] --bucket [S3_BUCKET]\n",
+		"Usage:\n  %v --name <NAME> --bucket <S3_BUCKET> [OPTIONS]\n",
 		filepath.Base(os.Args[0]),
 	)
 	os.Exit(1)
 }
 
-func list_databases(cfg *Config) ([]string, error) {
+func get_db_info(cfg *Config) (*DBInfo, error) {
 	c, err := pgx.ParseConfig(fmt.Sprintf("user=%v password=%v host=%v", cfg.DBUser, cfg.DBPass, cfg.DBHost))
 	if err != nil {
 		return nil, err
 	}
-	conn, err := pgx.ConnectConfig(context.Background(), c)
+	ctx := context.Background()
+	conn, err := pgx.ConnectConfig(ctx, c)
 	if err != nil {
 		return nil, err
 	}
 
-	defer conn.Close(context.Background())
+	defer conn.Close(ctx)
+
+	info := new(DBInfo)
+	if err := conn.QueryRow(ctx, "SHOW server_version").Scan(&info.version); err != nil {
+		return nil, err
+	}
 
 	rows, err := conn.Query(
-		context.Background(),
+		ctx,
 		"SELECT datname FROM pg_database WHERE datallowconn",
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return pgx.CollectRows(rows, pgx.RowTo[string])
+	info.dbs, err = pgx.CollectRows(rows, pgx.RowTo[string])
+	if err != nil {
+		return nil, err
+	}
+	return info, err
 }
 
-func dump(cfg *Config, dbs []string) error {
+func dump(cfg *Config, info *DBInfo) error {
 	if err := os.MkdirAll(cfg.Name, 0750); err != nil {
 		return err
 	}
@@ -112,7 +132,7 @@ func dump(cfg *Config, dbs []string) error {
 	}
 
 	// Assemble the commands.
-	jobs := make([]Job, 0, len(dbs)+2)
+	jobs := make([]Job, 0, len(info.dbs)+2)
 	jobs = append(jobs,
 		Job{
 			name: "roles",
@@ -136,7 +156,7 @@ func dump(cfg *Config, dbs []string) error {
 	args = append(args, "-f")
 
 	// Setup the jobs to dump each database.
-	for _, db := range dbs {
+	for _, db := range info.dbs {
 		jobs = append(jobs,
 			Job{
 				name: db + " database",
@@ -180,6 +200,53 @@ func dump(cfg *Config, dbs []string) error {
 	}
 
 	return ret
+}
+
+//go:embed template.md
+var tempSrc string
+
+func add_readme(cfg *Config, info *DBInfo) error {
+	fmt.Println("Generating README.md")
+	tmpl, err := template.New("test").Parse(tempSrc)
+	if err != nil {
+		return err
+	}
+
+	file := path.Join(cfg.Name, "README.md")
+	fh, err := os.Create(file)
+	if err != nil {
+		fmt.Println("Failed")
+		return fmt.Errorf("cannot open %q: %v", file, err)
+	}
+	defer fh.Close()
+
+	restores := make([]string, len(info.dbs))
+	format := "dir"
+	if cfg.Plain {
+		format = "text"
+		for i, db := range info.dbs {
+			restores[i] = fmt.Sprintf("psql -f %q", "db-"+db+".sql")
+		}
+	} else {
+		for i, db := range info.dbs {
+			create := "-C "
+			if db == "postgres" {
+				create = ""
+			}
+			restores[i] = fmt.Sprintf("pg_restore %v-d postgres -j 8 -f %q", create, "db-"+db)
+		}
+
+	}
+
+	return tmpl.Execute(fh, map[string]any{
+		"Name":      cfg.Name,
+		"Host":      cfg.DBHost,
+		"Date":      cfg.Time.Format(time.RFC3339),
+		"Version":   info.version,
+		"Databases": info.dbs,
+		"Restores":  restores,
+		"Format":    format,
+	})
 }
 
 func compress(cfg *Config) error {

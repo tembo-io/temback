@@ -17,6 +17,8 @@ go run . --name org_xyz-inst_abc-my_db --bucket my-backup-database
 
 This will create a directory named `org_xyz-inst_abc-my_db` that contains:
 
+*   `README.md`: A brief description of the backup, including the host name,
+    timestamp, and Postgres version, plus brief instructions to restore.
 *   `roles.sql`: A dump of all the database roles
 *   `tablespaces.sql`: A dump of all the tablespaces
 *   Directories starting with `db-` for each database, containing the output
@@ -58,12 +60,12 @@ Plain text backups do not support parallel restores.
 Options
 -------
 
-*   `--name`: The name of the backup
+*   `--name`: The name of the backup; required
+*   `--bucket`: The S3 bucket name; required
 *   `--host`: The Postgres host name; defaults to `PGHOST` if set
 *   `--user`: The Postgres username; defaults to `PGUSER` if set
 *   `--pass`: The Postgres password; defaults to `$PGPASSWORD` (preferred)
-*   `--bucket`: The S3 bucket name
-*   `--text`: Dump plain text
+*   `--text`: Dump plain text mode; defaults to directory mode
 *   `--clean`: Delete files
 
 [`pg_dump`]: https://www.postgresql.org/docs/current/app-pgdump.html

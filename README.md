@@ -68,4 +68,31 @@ Options
 *   `--text`: Dump plain text mode; defaults to directory mode
 *   `--clean`: Delete files
 
+Building
+--------
+
+To build the app, install Go and run:
+
+```sh
+make temback
+./temback --version
+```
+
+Baking
+------
+
+To bake a docker image, start a docker registry and use `make`:
+
+```sh
+docker run -d -p 5001:5000 --restart=always --name registry registry:2
+make image PUSH=true
+```
+
+Then pull it and run it:
+
+```sh
+docker pull --platform linux/amd64 localhost:5001/temback:latest
+docker run --rm --platform linux/amd64 localhost:5001/temback:latest
+```
+
 [`pg_dump`]: https://www.postgresql.org/docs/current/app-pgdump.html

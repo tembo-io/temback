@@ -3,16 +3,22 @@ REVISION := $(shell git rev-parse --short HEAD)
 REGISTRY ?= localhost:5001
 ldflags = -ldflags="-s -w -X 'main.version=$(VERSION)' -X 'main.build=$(REVISION)'"
 
+## temback: Build temback for the local platform.
 temback: main.go go.*
 	go build $(ldflags) -o $@ .
 
-image: temback
+## temback-linux-amd64: Build temback linux/amd64.
+temback-linux-amd64: main.go go.*
+	GOOS=linux GOARCH=amd64 go build $(ldflags) -o $@ .
+
+.PHONY: image # Build the linux/amd64 OCI image.
+image: temback-linux-amd64
 	registry=$(REGISTRY) version=$(VERSION) revision=$(REVISION) docker buildx bake $(if $(filter true,$(PUSH)),--push,)
 
 .PHONY: clean # Remove generated files
 clean:
-	$(GO) clean
-	$(RM) -rf _build vendor
+	go clean
+	$(RM) -rf temback*
 
 .PHONY: lint # Lint the project
 lint: .pre-commit-config.yaml .golangci.yaml

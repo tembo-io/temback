@@ -22,7 +22,7 @@ url = "https://github.com/tembo-io/shutdown-backup"
 target "default" {
   platforms = ["linux/amd64"]
   context = "."
-  dockerfile-inline = "FROM scratch\nCOPY temback .\nENTRYPOINT [\"/temback\"]\nCMD [\"--version\"]"
+  dockerfile-inline = "FROM scratch\nCOPY temback-linux-amd64 ./temback\nENTRYPOINT [\"/temback\"]\nCMD [\"--version\"]"
   tags = [
     "${registry}/temback:latest",
     "${registry}/temback:${version}",

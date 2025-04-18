@@ -1,0 +1,15 @@
+version: "2"
+linters:
+  default: all
+  disable:
+    # Too strict
+    - depguard
+    - err113
+    - exhaustruct
+    - errorlint
+    - wrapcheck
+    - forbidigo
+    - funlen
+    - nlreturn
+    - varnamelen
+    - wsl

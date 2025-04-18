@@ -1,3 +1,4 @@
+// Package main provides the backup utility.
 package main
 
 import (
@@ -22,57 +23,58 @@ import (
 )
 
 func h(err error) {
+	const errExitCode = 2
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(2)
+		os.Exit(errExitCode)
 	}
 }
 
 func main() {
 	cfg := newConfig()
 
-	info, err := get_db_info(cfg)
+	info, err := getDBInfo(cfg)
 	h(err)
 	h(dump(cfg, info))
-	h(add_readme(cfg, info))
+	h(addReadme(cfg, info))
 	h(compress(cfg))
 	h(upload(cfg))
 	h(cleanup(cfg))
 }
 
-type Config struct {
-	Name   string
-	DBHost string
-	DBUser string
-	DBPass string
-	Bucket string
-	Plain  bool
-	Clean  bool
-	Time   time.Time
+type backupConfig struct {
+	name   string
+	host   string
+	user   string
+	pass   string
+	bucket string
+	plain  bool
+	clean  bool
+	time   time.Time
 }
 
-type DBInfo struct {
+type dbInfo struct {
 	version string
 	dbs     []string
 }
 
-func (c *Config) Tarball() string {
-	return c.Name + ".tar.gz"
+func (c *backupConfig) Tarball() string {
+	return c.name + ".tar.gz"
 }
 
-func newConfig() *Config {
-	cfg := &Config{Time: time.Now().UTC()}
-	flag.StringVar(&cfg.Name, "name", "", "Backup name")
-	flag.StringVar(&cfg.DBHost, "host", os.Getenv("PGHOST"), "Database host name")
-	flag.StringVar(&cfg.DBUser, "user", os.Getenv("PGUSER"), "Database username")
-	flag.StringVar(&cfg.DBPass, "pass", os.Getenv("PGPASSWORD"), "Database password")
-	flag.StringVar(&cfg.Bucket, "bucket", "", "S3 bucket name")
-	flag.BoolVar(&cfg.Plain, "text", false, "Plain text format")
-	flag.BoolVar(&cfg.Clean, "clean", false, "Delete files after upload")
+func newConfig() *backupConfig {
+	cfg := &backupConfig{time: time.Now().UTC()}
+	flag.StringVar(&cfg.name, "name", "", "Backup name")
+	flag.StringVar(&cfg.host, "host", os.Getenv("PGHOST"), "Database host name")
+	flag.StringVar(&cfg.user, "user", os.Getenv("PGUSER"), "Database username")
+	flag.StringVar(&cfg.pass, "pass", os.Getenv("PGPASSWORD"), "Database password")
+	flag.StringVar(&cfg.bucket, "bucket", "", "S3 bucket name")
+	flag.BoolVar(&cfg.plain, "text", false, "Plain text format")
+	flag.BoolVar(&cfg.clean, "clean", false, "Delete files after upload")
 
 	flag.Parse()
-	if cfg.Name == "" || cfg.DBHost == "" || cfg.DBUser == "" || cfg.DBPass == "" ||
-		cfg.Bucket == "" {
+	if cfg.name == "" || cfg.host == "" || cfg.user == "" || cfg.pass == "" ||
+		cfg.bucket == "" {
 		usage()
 	}
 
@@ -84,11 +86,12 @@ func usage() {
 		"Usage:\n  %v --name <NAME> --bucket <S3_BUCKET> [OPTIONS]\n",
 		filepath.Base(os.Args[0]),
 	)
-	os.Exit(1)
+	const usageExitCode = 1
+	os.Exit(usageExitCode)
 }
 
-func get_db_info(cfg *Config) (*DBInfo, error) {
-	c, err := pgx.ParseConfig(fmt.Sprintf("user=%v password=%v host=%v", cfg.DBUser, cfg.DBPass, cfg.DBHost))
+func getDBInfo(cfg *backupConfig) (*dbInfo, error) {
+	c, err := pgx.ParseConfig(fmt.Sprintf("user=%v password=%v host=%v", cfg.user, cfg.pass, cfg.host))
 	if err != nil {
 		return nil, err
 	}
@@ -98,9 +101,9 @@ func get_db_info(cfg *Config) (*DBInfo, error) {
 		return nil, err
 	}
 
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 
-	info := new(DBInfo)
+	info := new(dbInfo)
 	if err := conn.QueryRow(ctx, "SHOW server_version").Scan(&info.version); err != nil {
 		return nil, err
 	}
@@ -120,8 +123,9 @@ func get_db_info(cfg *Config) (*DBInfo, error) {
 	return info, err
 }
 
-func dump(cfg *Config, info *DBInfo) error {
-	if err := os.MkdirAll(cfg.Name, 0750); err != nil {
+func dump(cfg *backupConfig, info *dbInfo) error {
+	const dirMode = 0750
+	if err := os.MkdirAll(cfg.name, dirMode); err != nil {
 		return err
 	}
 
@@ -132,22 +136,19 @@ func dump(cfg *Config, info *DBInfo) error {
 	}
 
 	// Assemble the commands.
-	jobs := make([]Job, 0, len(info.dbs)+2)
-	jobs = append(jobs,
-		Job{
-			name: "roles",
-			cmd:  exec.Command("pg_dumpall", "-r", "-f", path.Join(cfg.Name, "roles.sql")),
-		},
-		Job{
-			name: "tablespaces",
-			cmd:  exec.Command("pg_dumpall", "-t", "-f", path.Join(cfg.Name, "tablespaces.sql")),
-		},
-	)
+	globals := []string{"roles", "tablespaces"}
+	jobs := make([]Job, 0, len(info.dbs)+len(globals))
+	for _, g := range globals {
+		// #nosec G204
+		jobs = append(jobs, Job{name: g, cmd: exec.Command(
+			"pg_dumpall", "-r", "-f", path.Join(cfg.name, g+".sql")),
+		})
+	}
 
 	// Setup args according to configuration.
 	args := []string{"-C", "-F"}
 	ext := ""
-	if cfg.Plain {
+	if cfg.plain {
 		args = append(args, "p")
 		ext = ".sql"
 	} else {
@@ -157,14 +158,12 @@ func dump(cfg *Config, info *DBInfo) error {
 
 	// Setup the jobs to dump each database.
 	for _, db := range info.dbs {
+		// #nosec G204
 		jobs = append(jobs,
-			Job{
-				name: db + " database",
-				cmd: exec.Command(
-					"pg_dump",
-					slices.Concat(args, []string{path.Join(cfg.Name, "db-"+db+ext), db})...,
-				),
-			},
+			Job{name: db + " database", cmd: exec.Command(
+				"pg_dump",
+				slices.Concat(args, []string{path.Join(cfg.name, "db-"+db+ext), db})...,
+			)},
 		)
 	}
 
@@ -175,9 +174,9 @@ func dump(cfg *Config, info *DBInfo) error {
 			// defer wg.Done()
 			fmt.Printf("Dumping %v\n", job.name)
 			job.cmd.Env = append(job.cmd.Env,
-				"PGHOST="+cfg.DBHost,
-				"PGUSER="+cfg.DBUser,
-				"PGPASSWORD="+cfg.DBPass,
+				"PGHOST="+cfg.host,
+				"PGUSER="+cfg.user,
+				"PGPASSWORD="+cfg.pass,
 				"PATH="+os.Getenv("PATH"),
 			)
 			job.cmd.Stderr = os.Stderr
@@ -189,7 +188,7 @@ func dump(cfg *Config, info *DBInfo) error {
 
 	// Wait for the commands to finish.
 	var ret error
-	for range len(jobs) {
+	for range jobs {
 		job := <-ch
 		if job.err == nil {
 			fmt.Printf("Successfully dumped %v\n", job.name)
@@ -205,24 +204,29 @@ func dump(cfg *Config, info *DBInfo) error {
 //go:embed template.md
 var tempSrc string
 
-func add_readme(cfg *Config, info *DBInfo) error {
+func addReadme(cfg *backupConfig, info *dbInfo) error {
 	fmt.Println("Generating README.md")
 	tmpl, err := template.New("test").Parse(tempSrc)
 	if err != nil {
 		return err
 	}
 
-	file := path.Join(cfg.Name, "README.md")
-	fh, err := os.Create(file)
+	root, err := os.OpenRoot(cfg.name)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = root.Close() }()
+
+	fh, err := root.Create("README.md")
 	if err != nil {
 		fmt.Println("Failed")
-		return fmt.Errorf("cannot open %q: %v", file, err)
+		return fmt.Errorf("cannot open README.md: %v", err)
 	}
-	defer fh.Close()
+	defer func() { _ = fh.Close() }()
 
 	restores := make([]string, len(info.dbs))
 	format := "dir"
-	if cfg.Plain {
+	if cfg.plain {
 		format = "text"
 		for i, db := range info.dbs {
 			restores[i] = fmt.Sprintf("psql -f %q", "db-"+db+".sql")
@@ -235,13 +239,12 @@ func add_readme(cfg *Config, info *DBInfo) error {
 			}
 			restores[i] = fmt.Sprintf("pg_restore %v-d postgres -j 8 -f %q", create, "db-"+db)
 		}
-
 	}
 
 	return tmpl.Execute(fh, map[string]any{
-		"Name":      cfg.Name,
-		"Host":      cfg.DBHost,
-		"Date":      cfg.Time.Format(time.RFC3339),
+		"Name":      cfg.name,
+		"Host":      cfg.host,
+		"Date":      cfg.time.Format(time.RFC3339),
 		"Version":   info.version,
 		"Databases": info.dbs,
 		"Restores":  restores,
@@ -249,13 +252,13 @@ func add_readme(cfg *Config, info *DBInfo) error {
 	})
 }
 
-func compress(cfg *Config) error {
+func compress(cfg *backupConfig) error {
 	file := cfg.Tarball()
 	fmt.Printf("Archiving %v\n", file)
-	return targz.Compress(cfg.Name, file)
+	return targz.Compress(cfg.name, file)
 }
 
-func upload(cfg *Config) error {
+func upload(cfg *backupConfig) error {
 	file := cfg.Tarball()
 	fmt.Printf("Uploading %v...", file)
 
@@ -266,16 +269,22 @@ func upload(cfg *Config) error {
 	client := s3.NewFromConfig(awsCfg)
 	_ = client
 
-	fh, err := os.Open(file)
+	root, err := os.OpenRoot(".")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = root.Close() }()
+
+	fh, err := root.Open(file)
 	if err != nil {
 		fmt.Println("Failed")
 		return fmt.Errorf("cannot open %q: %v", file, err)
 	}
-	defer fh.Close()
+	defer func() { _ = fh.Close() }()
 
 	if _, err := client.PutObject(context.Background(), &s3.PutObjectInput{
-		Bucket:            aws.String(cfg.Bucket),
-		Key:               aws.String(cfg.Name),
+		Bucket:            aws.String(cfg.bucket),
+		Key:               aws.String(cfg.name),
 		Body:              fh,
 		ChecksumAlgorithm: types.ChecksumAlgorithmSha256,
 		ContentType:       aws.String("application/gzip"),
@@ -287,12 +296,12 @@ func upload(cfg *Config) error {
 	return nil
 }
 
-func cleanup(cfg *Config) error {
-	if !cfg.Clean {
+func cleanup(cfg *backupConfig) error {
+	if !cfg.clean {
 		return nil
 	}
 	fmt.Print("Cleaning up...")
-	for _, path := range []string{cfg.Tarball(), cfg.Name} {
+	for _, path := range []string{cfg.Tarball(), cfg.name} {
 		if err := os.RemoveAll(path); err != nil {
 			fmt.Println()
 			return err

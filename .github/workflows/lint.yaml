@@ -1,0 +1,16 @@
+name: 🔎 Lint
+on: [push, pull_request]
+jobs:
+  lint:
+    name: 🔎 Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with: { go-version-file: go.mod, check-latest: true }
+      - name: Install Dependencies
+        run: make debian-lint-depends
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1

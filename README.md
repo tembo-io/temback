@@ -7,12 +7,10 @@ to S3.
 To use, first authenticate to S3 with the appropriate profile. Then:
 
 ```sh
-go run . --help
+temback --help
 
-env PGHOST=postgres.example.org \
-    PGUSER=postgres \
-    PGPASSWORD=XXXXXXX \
-go run . --name org_xyz-inst_abc-my_db --bucket my-backup-database
+env PGHOST=postgres.example.org PGUSER=postgres PGPASSWORD=XXXXXXX \
+temback --name example-backup --bucket backup-bucket
 ```
 
 This will create a directory named `org_xyz-inst_abc-my_db` that contains:

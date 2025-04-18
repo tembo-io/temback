@@ -17,7 +17,7 @@ variable "revision" {
 # Values to use in the targets.
 now = timestamp()
 authors = "Tembo"
-url = "https://github.com/tembo-io/shutdown-backup"
+url = "https://github.com/tembo-io/temback"
 
 target "default" {
   platforms = ["linux/amd64"]

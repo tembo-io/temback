@@ -1,4 +1,4 @@
-module github.com/tembo-io/shutdown-backup
+module github.com/tembo-io/temback
 
 go 1.24.0
 

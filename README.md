@@ -1,5 +1,5 @@
-Shutdown Backup
-===============
+Temback
+=======
 
 A little Go app that takes a full backup of a Postgres cluster and uploads it
 to S3.

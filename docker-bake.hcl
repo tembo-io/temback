@@ -20,9 +20,15 @@ authors = "Tembo"
 url = "https://github.com/tembo-io/temback"
 
 target "default" {
-  platforms = ["linux/amd64"]
+  platforms = ["linux/amd64", "linux/arm64"]
   context = "."
-  dockerfile-inline = "FROM scratch\nCOPY temback-linux-amd64 ./temback\nENTRYPOINT [\"/temback\"]\nCMD [\"--version\"]"
+  dockerfile-inline = <<EOT
+  FROM scratch
+  ARG TARGETOS TARGETARCH
+  COPY _build/$${TARGETOS}-$${TARGETARCH}/temback ./temback
+  ENTRYPOINT ["/temback"]
+  CMD ["--version"]
+  EOT
   tags = [
     "${registry}/temback:latest",
     "${registry}/temback:${version}",

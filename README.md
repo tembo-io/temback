@@ -73,7 +73,18 @@ To build the app, install Go and run:
 
 ```sh
 make temback
-./temback --version
+```
+
+To run it with the `--version` option:
+
+```sh
+make run
+```
+
+To see the location of the binary:
+
+```sh
+make show-build
 ```
 
 Baking
@@ -89,8 +100,8 @@ make image PUSH=true
 Then pull it and run it:
 
 ```sh
-docker pull --platform linux/amd64 localhost:5001/temback:latest
-docker run --rm --platform linux/amd64 localhost:5001/temback:latest
+docker pull localhost:5001/temback:latest
+docker run --rm localhost:5001/temback:latest
 ```
 
 [`pg_dump`]: https://www.postgresql.org/docs/current/app-pgdump.html

@@ -15,6 +15,12 @@ temback: _build/$(PLATFORM)/temback
 _build/%/temback: main.go go.*
 	GOOS=$(word 1,$(subst -, ,$*)) GOARCH=$(word 2,$(subst -, ,$*)) $(GO) build $(ldflags) -o $@ ./$<
 
+run: _build/$(PLATFORM)/temback
+	@./_build/$(PLATFORM)/temback --version
+
+show-build: _build/$(PLATFORM)/temback
+	@echo ./_build/$(PLATFORM)/temback
+
 .PHONY: version-env # Echo setting an environment variable with the release version.
 version-env:
 	@echo VERSION=$(VERSION)
@@ -45,7 +51,7 @@ _build/artifacts/temback-$(VERSION)-$(PLATFORM).tar.gz: README.md LICENSE.md CHA
 ############################################################################
 # OCI images.
 .PHONY: image # Build the linux/amd64 OCI image.
-image: temback-linux-amd64
+image: _build/linux-amd64/temback _build/linux-arm64/temback
 	registry=$(REGISTRY) version=$(VERSION) revision=$(REVISION) docker buildx bake $(if $(filter true,$(PUSH)),--push,)
 
 .PHONY: clean # Remove generated files

@@ -17,4 +17,4 @@ jobs:
       - name: Build
         run: make
       - name: Run
-        run: ./temback --version
+        run: ./_build/linux-amd64/temback --version

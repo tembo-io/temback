@@ -24,7 +24,7 @@ go.work
 .vscode/
 
 # Build artifacts
-/temback*
+/_build/
 
 # OS Stuff
 .DS_Store

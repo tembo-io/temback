@@ -40,13 +40,14 @@ these commands (assuming a superuser named `postgres`):
 PGUSER=postgres
 psql -f roles.sql
 psql -f tablespaces.sql
-for dir in db-*; do pg_restore -j 8 -f "$dir"; done
+pg_restore -j 8 -f db-postgres
+pg_restore -C -j 8 -f db-app
 ```
 
-Modify the `-j` option to change the number of parallel jobs restoring each
-database.
+Use `-C` to create a database before restoring it. Modify the `-j` option to
+change the number of parallel jobs restoring each database.
 
-For a backup made with `--text`, change that last line to:
+For a backup made with `--text`, use `psql` to restore the databases:
 
 ```sh
 for dir in db-*; do psql -f "$dir"; done

@@ -13,8 +13,8 @@ default database is `postgres`:
 
 ```sh
 export PGUSER=postgres
-pgsql -f roles.sql
-pgsql -f tablespaces.sql
+psql -f roles.sql
+psql -f tablespaces.sql
 {{ range .Restores -}}
 {{.}}
 {{ end -}}
@@ -29,4 +29,4 @@ details.{{end}}
 [`psql`]: https://www.postgresql.org/docs/current/app-psql.html
 {{ if eq .Format "dir" -}}
 [`pg_restore`]: https://www.postgresql.org/docs/current/app-pgrestore.html
-{{ end }}
+{{ end -}}

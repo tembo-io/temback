@@ -173,11 +173,16 @@ func dump(cfg *backupConfig, info *dbInfo) error {
 
 	// Setup the jobs to dump each database.
 	for _, db := range info.dbs {
+		dbArgs := args
+		if db == "postgres" || db == "template1" {
+			// Omit -C
+			dbArgs = args[1:]
+		}
 		// #nosec G204
 		jobs = append(jobs,
 			Job{name: db + " database", cmd: exec.Command(
 				"pg_dump",
-				slices.Concat(args, []string{path.Join(cfg.name, "db-"+db+ext), db})...,
+				slices.Concat(dbArgs, []string{path.Join(cfg.name, "db-"+db+ext), db})...,
 			)},
 		)
 	}
@@ -249,7 +254,7 @@ func addReadme(cfg *backupConfig, info *dbInfo) error {
 	} else {
 		for i, db := range info.dbs {
 			create := "-C "
-			if db == "postgres" {
+			if db == "postgres" || db == "template1" {
 				create = ""
 			}
 			restores[i] = fmt.Sprintf("pg_restore %v-d postgres -j 8 -f %q", create, "db-"+db)

@@ -12,7 +12,7 @@ ldflags = -ldflags="-s -w -X 'main.version=$(VERSION)' -X 'main.build=$(REVISION
 .PHONY: temback # Build temback.
 temback: _build/$(PLATFORM)/temback
 
-_build/%/temback: main.go go.*
+_build/%/temback: main.go go.* template.md
 	GOOS=$(word 1,$(subst -, ,$*)) GOARCH=$(word 2,$(subst -, ,$*)) $(GO) build $(ldflags) -o $@ ./$<
 
 run: _build/$(PLATFORM)/temback

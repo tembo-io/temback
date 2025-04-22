@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
-## [v0.1.0] — To Be Released
+## [v0.1.0] — 2025-04-22
 
 ### ⚡ Improvements
 
@@ -17,13 +17,14 @@ All notable changes to this project will be documented in this file. It uses the
     database
 *   Supports parallel directory and plain text dumps
 *   Generates a `README.md` to guide restoration
-*   Uploads resulting backup tarball to S3
+*   Optionally uploads resulting backup tarball to S3
 
 ### 🏗️ Build Setup
 
 *   Built with Go
 *   Compiled for a number of platforms
 *   Download the binary from [GitHub]
+*   Also available as an [OCI image]
 
 ### 📚 Documentation
 
@@ -34,4 +35,5 @@ All notable changes to this project will be documented in this file. It uses the
   [`pg_dump`]: https://www.postgresql.org/docs/current/app-pgdump.html
   [`pg_dumpall`]: https://www.postgresql.org/docs/current/app-pg-dumpall.html
   [GitHub]: https://github.com/tembo-io/temback/releases
+  [OCI image]: https://quay.io/tembo/temback
   [README]: https://github.com/tembo-io/temback/blob/v0.1.0/README.md

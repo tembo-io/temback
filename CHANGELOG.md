@@ -7,6 +7,34 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
+## [v0.1.1] — To Be Released
+
+### ⚡ Improvements
+
+New features and other improvements.
+
+### 🪲 Bug Fixes
+
+Issues addressed.
+
+### 📔 Notes
+
+Security issues fixed, incompatible changes.
+
+### ⬆️ Dependency Updates
+
+Updates to third party dependencies.
+
+### 🏗️ Build Setup
+
+Changes to how Harpo is built and released.
+
+### 📚 Documentation
+
+Documentation improvements.
+
+  [v0.1.1]: https://github.com/tembo-io/temback/compare/v0.1.1...v0.1.1
+
 ## [v0.1.0] — 2025-04-22
 
 ### ⚡ Improvements

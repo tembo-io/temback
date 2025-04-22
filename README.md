@@ -4,7 +4,8 @@ Temback
 A little Go app that takes a full backup of a Postgres cluster and uploads it
 to S3.
 
-To use, first authenticate to S3 with the appropriate profile. Then:
+Usage
+-----
 
 ```sh
 temback --help
@@ -23,11 +24,14 @@ This will create a directory named `example-backup` that contains:
     of the [`pg_dump`] directory format.
 
 The `--text` option instead dumps each database as a plain text file named
-`db-$dbname.sql`.
+`db-$db_name.sql`.
 
-With `--compress` or `--bucket`, this directory will be archived as a tarball
-named `example-backup.tar.gz`. The `--bucket` option uploads this tarball to
-the specified S3 bucket.
+To push to S3, authenticate to S3 with the appropriate profile then pass
+`--bucket` with the unique bucket name.
+
+With `--compress` or `--bucket`, the backup directory will be archived as a
+tarball named `example-backup.tar.gz`. The `--bucket` option uploads this
+tarball to the specified S3 bucket.
 
 Restore
 -------

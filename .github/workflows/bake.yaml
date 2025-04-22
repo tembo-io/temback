@@ -10,6 +10,7 @@ permissions:
 jobs:
   bake:
     name: 🍪 Bake Image
+    # Run on Tembo runner to simplify pushing to ECR.
     runs-on:
       - runs-on=${{ github.run_id }}
       - runner=small-amd64

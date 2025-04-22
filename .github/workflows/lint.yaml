@@ -3,10 +3,7 @@ on: [push, pull_request]
 jobs:
   lint:
     name: 🔎 Lint Code
-    runs-on:
-      - runs-on=${{ github.run_id }}
-      - runner=small-amd64
-      - private=true
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4

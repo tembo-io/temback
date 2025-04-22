@@ -41,20 +41,18 @@ jobs:
           password: ${{ secrets.QUAY_PASSWORD_TEMBO }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Build${{ startsWith(github.ref, 'refs/tags') && ' and Push' || '' }}
-        env:
-          REGISTRY: quay.io/tembo/temback
-          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-          PUSH: "${{ startsWith(github.ref, 'refs/tags') }}"
+      - name: Build binaries
         run: |
-          make image
-          if [ "$PUSH" = "true" ]; then
-            # Tag and push to ECR
-            docker tag $REGISTRY:${{ github.ref_name }} $ECR_REGISTRY:${{ github.ref_name }}
-            docker push $ECR_REGISTRY:${{ github.ref_name }}
-            # If this is a version tag, also update 'latest' tag
-            if [[ "${{ github.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              docker tag $REGISTRY:${{ github.ref_name }} $ECR_REGISTRY:latest
-              docker push $ECR_REGISTRY:latest
-            fi
-          fi
+          make _build/linux-amd64/temback _build/linux-arm64/temback
+      - name: Get version
+        run: make version-env >> $GITHUB_ENV
+      - name: Build and push
+        uses: docker/bake-action@v6
+        with:
+          files: docker-bake.hcl
+          push: true
+          set: |
+            *.tags=quay.io/tembo/temback:${{ github.sha }}
+            *.tags=${{ secrets.ECR_REGISTRY }}:${{ github.sha }}
+            *.version=${{ env.VERSION }}
+            *.revision=${{ github.sha }}

@@ -10,10 +10,10 @@ To use, first authenticate to S3 with the appropriate profile. Then:
 temback --help
 
 env PGHOST=postgres.example.org PGUSER=postgres PGPASSWORD=XXXXXXX \
-temback --name example-backup --bucket backup-bucket
+temback --name example-backup
 ```
 
-This will create a directory named `org_xyz-inst_abc-my_db` that contains:
+This will create a directory named `example-backup` that contains:
 
 *   `README.md`: A brief description of the backup, including the host name,
     timestamp, and Postgres version, plus brief instructions to restore.
@@ -25,17 +25,16 @@ This will create a directory named `org_xyz-inst_abc-my_db` that contains:
 The `--text` option instead dumps each database as a plain text file named
 `db-$dbname.sql`.
 
-This directory will be archived as a tarball named
-`org_xyz-inst_abc-my_db.tar.gz` that's uploaded to the S3 bucket specified by
-`--bucket`.
+With `--compress` or `--bucket`, this directory will be archived as a tarball
+named `example-backup.tar.gz`. The `--bucket` option uploads this tarball to
+the specified S3 bucket.
 
 Restore
 -------
 
-To restore from this backup to a Postgres cluster running the same or later
-version of Postgres as the original, decompress the archive and change into
-the backup directory, then execute these commands (assuming a superuser named
-`postgres`):
+To restore this backup to a Postgres cluster running the same or later version
+of Postgres as the original, change into the backup directory, then execute
+these commands (assuming a superuser named `postgres`):
 
 ```sh
 PGUSER=postgres
@@ -59,12 +58,13 @@ Options
 -------
 
 *   `--name`: The name of the backup; required
-*   `--bucket`: The S3 bucket name; required
+*   `--bucket`: Upload to the named S3 bucket
+*   `--compress`: Compress into a tarball (ignored with `--bucket`)
 *   `--host`: The Postgres host name; defaults to `PGHOST` if set
 *   `--user`: The Postgres username; defaults to `PGUSER` if set
 *   `--pass`: The Postgres password; defaults to `$PGPASSWORD` (preferred)
 *   `--text`: Dump plain text mode; defaults to directory mode
-*   `--clean`: Delete files
+*   `--clean`: Delete temporary files
 
 Building
 --------

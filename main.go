@@ -49,14 +49,15 @@ func main() {
 }
 
 type backupConfig struct {
-	name   string
-	host   string
-	user   string
-	pass   string
-	bucket string
-	plain  bool
-	clean  bool
-	time   time.Time
+	name     string
+	host     string
+	user     string
+	pass     string
+	bucket   string
+	compress bool
+	plain    bool
+	clean    bool
+	time     time.Time
 }
 
 type dbInfo struct {
@@ -75,6 +76,7 @@ func newConfig() *backupConfig {
 	flag.StringVar(&cfg.user, "user", os.Getenv("PGUSER"), "Database username")
 	flag.StringVar(&cfg.pass, "pass", os.Getenv("PGPASSWORD"), "Database password")
 	flag.StringVar(&cfg.bucket, "bucket", "", "S3 bucket name")
+	flag.BoolVar(&cfg.compress, "compress", false, "Compress the backup (ignored with --bucket)")
 	flag.BoolVar(&cfg.plain, "text", false, "Plain text format")
 	flag.BoolVar(&cfg.clean, "clean", false, "Delete files after upload")
 
@@ -86,8 +88,7 @@ func newConfig() *backupConfig {
 		os.Exit(0)
 	}
 
-	if cfg.name == "" || cfg.host == "" || cfg.user == "" || cfg.pass == "" ||
-		cfg.bucket == "" {
+	if cfg.name == "" || cfg.host == "" || cfg.user == "" || cfg.pass == "" {
 		usage()
 	}
 
@@ -96,7 +97,7 @@ func newConfig() *backupConfig {
 
 func usage() {
 	fmt.Printf(
-		"Usage:\n  %v --name <NAME> --bucket <S3_BUCKET> [OPTIONS]\n",
+		"Usage:\n  %v --name <NAME> [--bucket <S3_BUCKET>] [OPTIONS]\n",
 		filepath.Base(os.Args[0]),
 	)
 	const usageExitCode = 1
@@ -137,6 +138,7 @@ func getDBInfo(cfg *backupConfig) (*dbInfo, error) {
 }
 
 func dump(cfg *backupConfig, info *dbInfo) error {
+	fmt.Printf("Backing up to %v\n", cfg.name)
 	const dirMode = 0750
 	if err := os.MkdirAll(cfg.name, dirMode); err != nil {
 		return err
@@ -185,7 +187,7 @@ func dump(cfg *backupConfig, info *dbInfo) error {
 	for _, job := range jobs {
 		go func(job Job) {
 			// defer wg.Done()
-			fmt.Printf("Dumping %v\n", job.name)
+			fmt.Printf("  Dumping %v\n", job.name)
 			job.cmd.Env = append(job.cmd.Env,
 				"PGHOST="+cfg.host,
 				"PGUSER="+cfg.user,
@@ -204,10 +206,10 @@ func dump(cfg *backupConfig, info *dbInfo) error {
 	for range jobs {
 		job := <-ch
 		if job.err == nil {
-			fmt.Printf("Successfully dumped %v\n", job.name)
+			fmt.Printf("  Successfully dumped %v\n", job.name)
 		} else {
 			ret = job.err
-			fmt.Printf("Failed to dump dumped %v\n", job.name)
+			fmt.Printf("  Failed to dump dumped %v\n", job.name)
 		}
 	}
 
@@ -266,12 +268,23 @@ func addReadme(cfg *backupConfig, info *dbInfo) error {
 }
 
 func compress(cfg *backupConfig) error {
+	if !cfg.compress && cfg.bucket == "" {
+		return nil
+	}
 	file := cfg.Tarball()
-	fmt.Printf("Archiving %v\n", file)
-	return targz.Compress(cfg.name, file)
+	fmt.Printf("Archiving %v...", file)
+	if err := targz.Compress(cfg.name, file); err != nil {
+		fmt.Println("Failed")
+		return err
+	}
+	fmt.Println("Success")
+	return nil
 }
 
 func upload(cfg *backupConfig) error {
+	if cfg.bucket == "" {
+		return nil
+	}
 	file := cfg.Tarball()
 	fmt.Printf("Uploading %v...", file)
 
@@ -305,21 +318,32 @@ func upload(cfg *backupConfig) error {
 		fmt.Println("Failed")
 		return err
 	}
-	fmt.Println("Done!")
+	fmt.Println("Success")
 	return nil
 }
 
 func cleanup(cfg *backupConfig) error {
-	if !cfg.clean {
+	if !cfg.clean || (cfg.bucket == "" && !cfg.compress) {
+		fmt.Println("Done!")
 		return nil
 	}
-	fmt.Print("Cleaning up...")
-	for _, path := range []string{cfg.Tarball(), cfg.name} {
-		if err := os.RemoveAll(path); err != nil {
+
+	fmt.Println("Cleaning up")
+	if cfg.bucket != "" {
+		// Backup uploaded, clean up everything.
+		for _, path := range []string{cfg.Tarball(), cfg.name} {
+			if err := os.RemoveAll(path); err != nil {
+				fmt.Println()
+				return err
+			}
+		}
+	} else if cfg.compress {
+		// Just remove the directory.
+		if err := os.RemoveAll(cfg.name); err != nil {
 			fmt.Println()
 			return err
 		}
 	}
-	fmt.Println("Done")
+	fmt.Println("Done!")
 	return nil
 }

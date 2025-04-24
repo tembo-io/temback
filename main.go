@@ -54,6 +54,7 @@ type backupConfig struct {
 	user     string
 	pass     string
 	bucket   string
+	dir      string
 	compress bool
 	plain    bool
 	clean    bool
@@ -69,6 +70,13 @@ func (c *backupConfig) Tarball() string {
 	return c.name + ".tar.gz"
 }
 
+func (c *backupConfig) UploadKey() string {
+	if c.dir == "" {
+		return c.Tarball()
+	}
+	return c.dir + "/" + c.Tarball()
+}
+
 func newConfig() *backupConfig {
 	cfg := &backupConfig{time: time.Now().UTC()}
 	flag.StringVar(&cfg.name, "name", "", "Backup name")
@@ -76,6 +84,7 @@ func newConfig() *backupConfig {
 	flag.StringVar(&cfg.user, "user", os.Getenv("PGUSER"), "Database username")
 	flag.StringVar(&cfg.pass, "pass", os.Getenv("PGPASSWORD"), "Database password")
 	flag.StringVar(&cfg.bucket, "bucket", "", "S3 bucket name")
+	flag.StringVar(&cfg.dir, "dir", "", "S3 bucket directory")
 	flag.BoolVar(&cfg.compress, "compress", false, "Compress the backup (ignored with --bucket)")
 	flag.BoolVar(&cfg.plain, "text", false, "Plain text format")
 	flag.BoolVar(&cfg.clean, "clean", false, "Delete files after upload")
@@ -315,7 +324,7 @@ func upload(cfg *backupConfig) error {
 
 	if _, err := client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:            aws.String(cfg.bucket),
-		Key:               aws.String(cfg.name),
+		Key:               aws.String(cfg.UploadKey()),
 		Body:              fh,
 		ChecksumAlgorithm: types.ChecksumAlgorithmSha256,
 		ContentType:       aws.String("application/gzip"),

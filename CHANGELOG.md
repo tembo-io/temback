@@ -7,31 +7,16 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
-## [v0.1.1] — To Be Released
+## [v0.1.1] — 2025-04-24
 
 ### ⚡ Improvements
 
-New features and other improvements.
+*   Added the `--dir` option to specify the S3 subdirectory in which to upload
+    backups.
 
 ### 🪲 Bug Fixes
 
-Issues addressed.
-
-### 📔 Notes
-
-Security issues fixed, incompatible changes.
-
-### ⬆️ Dependency Updates
-
-Updates to third party dependencies.
-
-### 🏗️ Build Setup
-
-Changes to how Harpo is built and released.
-
-### 📚 Documentation
-
-Documentation improvements.
+*   Fixed the name of the file uploaded to S3 to end in `.tar.gz`.
 
   [v0.1.1]: https://github.com/tembo-io/temback/compare/v0.1.1...v0.1.1
 

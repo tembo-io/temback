@@ -64,6 +64,7 @@ Options
 
 *   `--name`: The name of the backup; required
 *   `--bucket`: Upload to the named S3 bucket
+*   `--dir`: Upload to the named S3 subdirectory
 *   `--compress`: Compress into a tarball (ignored with `--bucket`)
 *   `--host`: The Postgres host name; defaults to `PGHOST` if set
 *   `--user`: The Postgres username; defaults to `PGUSER` if set

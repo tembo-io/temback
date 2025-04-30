@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"slices"
+	"strings"
 	"text/template"
 	"time"
 
@@ -39,6 +40,10 @@ func h(err error) {
 func main() {
 	cfg := newConfig()
 
+	if cfg.chdir != "" {
+		fmt.Printf("Switching to %v\n", cfg.chdir)
+		h(os.Chdir(cfg.chdir))
+	}
 	info, err := getDBInfo(cfg)
 	h(err)
 	h(dump(cfg, info))
@@ -55,6 +60,7 @@ type backupConfig struct {
 	pass     string
 	bucket   string
 	dir      string
+	chdir    string
 	compress bool
 	plain    bool
 	clean    bool
@@ -77,14 +83,45 @@ func (c *backupConfig) UploadKey() string {
 	return c.dir + "/" + c.Tarball()
 }
 
+func (c *backupConfig) Env() []string {
+	env := []string{"PATH=" + os.Getenv("PATH")}
+	for k, v := range map[string]string{
+		"PGUSER":     c.user,
+		"PGPASSWORD": c.pass,
+		"PGHOST":     c.host,
+	} {
+		if v != "" {
+			env = append(env, k+"="+v)
+		} else if e := os.Getenv(k); e != "" {
+			env = append(env, k+"="+e)
+		}
+	}
+	return env
+}
+
+func (c *backupConfig) ConnString() string {
+	params := []string{}
+	for k, v := range map[string]string{
+		"user":     c.user,
+		"password": c.pass,
+		"host":     c.host,
+	} {
+		if v != "" {
+			params = append(params, k+"="+v)
+		}
+	}
+	return strings.Join(params, " ")
+}
+
 func newConfig() *backupConfig {
 	cfg := &backupConfig{time: time.Now().UTC()}
 	flag.StringVar(&cfg.name, "name", "", "Backup name")
-	flag.StringVar(&cfg.host, "host", os.Getenv("PGHOST"), "Database host name")
-	flag.StringVar(&cfg.user, "user", os.Getenv("PGUSER"), "Database username")
-	flag.StringVar(&cfg.pass, "pass", os.Getenv("PGPASSWORD"), "Database password")
+	flag.StringVar(&cfg.host, "host", "", "Database host name")
+	flag.StringVar(&cfg.user, "user", "", "Database username")
+	flag.StringVar(&cfg.pass, "pass", "", "Database password")
 	flag.StringVar(&cfg.bucket, "bucket", "", "S3 bucket name")
 	flag.StringVar(&cfg.dir, "dir", "", "S3 bucket directory")
+	flag.StringVar(&cfg.chdir, "cd", "", "Directory to work in")
 	flag.BoolVar(&cfg.compress, "compress", false, "Compress the backup (ignored with --bucket)")
 	flag.BoolVar(&cfg.plain, "text", false, "Plain text format")
 	flag.BoolVar(&cfg.clean, "clean", false, "Delete files after upload")
@@ -97,7 +134,7 @@ func newConfig() *backupConfig {
 		os.Exit(0)
 	}
 
-	if cfg.name == "" || cfg.host == "" || cfg.user == "" || cfg.pass == "" {
+	if cfg.name == "" {
 		usage()
 	}
 
@@ -114,7 +151,7 @@ func usage() {
 }
 
 func getDBInfo(cfg *backupConfig) (*dbInfo, error) {
-	c, err := pgx.ParseConfig(fmt.Sprintf("user=%v password=%v host=%v", cfg.user, cfg.pass, cfg.host))
+	c, err := pgx.ParseConfig(cfg.ConnString())
 	if err != nil {
 		return nil, err
 	}
@@ -196,18 +233,13 @@ func dump(cfg *backupConfig, info *dbInfo) error {
 		)
 	}
 
+	// Assemble job environment variables.
 	// Start the jobs.
 	ch := make(chan Job)
 	for _, job := range jobs {
 		go func(job Job) {
-			// defer wg.Done()
 			fmt.Printf("  Dumping %v\n", job.name)
-			job.cmd.Env = append(job.cmd.Env,
-				"PGHOST="+cfg.host,
-				"PGUSER="+cfg.user,
-				"PGPASSWORD="+cfg.pass,
-				"PATH="+os.Getenv("PATH"),
-			)
+			job.cmd.Env = append(job.cmd.Env, cfg.Env()...)
 			job.cmd.Stderr = os.Stderr
 			job.cmd.Stdout = os.Stdout
 			job.err = job.cmd.Run()

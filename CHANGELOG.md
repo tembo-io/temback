@@ -7,6 +7,20 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
+## [v0.2.0] — 2025-04-30
+
+### ⚡ Improvements
+
+*   Added the `--cd` option to switch to a directory before performing the backup.
+*   Refactored the handling of the connection options and environment
+    variables to avoid passing a password on the command-line, and to only set
+    the values if they exist. This will allow backups without a username,
+    password, or host name, or the equivalent `PGUSER`, `PGPASSWORD`, and
+    `PGHOST` environment variables, while respecting those variables and
+    options.
+
+  [v0.2.0]: https://github.com/tembo-io/temback/compare/v0.1.1...v0.2.1
+
 ## [v0.1.1] — 2025-04-24
 
 ### ⚡ Improvements
@@ -18,7 +32,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Fixed the name of the file uploaded to S3 to end in `.tar.gz`.
 
-  [v0.1.1]: https://github.com/tembo-io/temback/compare/v0.1.1...v0.1.1
+  [v0.1.1]: https://github.com/tembo-io/temback/compare/v0.1.0...v0.1.1
 
 ## [v0.1.0] — 2025-04-22
 

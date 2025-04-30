@@ -63,6 +63,7 @@ Options
 -------
 
 *   `--name`: The name of the backup; required
+*   `--cd`: Directory to switch into to generate the backup files
 *   `--bucket`: Upload to the named S3 bucket
 *   `--dir`: Upload to the named S3 subdirectory
 *   `--compress`: Compress into a tarball (ignored with `--bucket`)

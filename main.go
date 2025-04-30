@@ -101,6 +101,11 @@ func newConfig() *backupConfig {
 		usage()
 	}
 
+	// If bucket is set, write to /tmp/<cfg.name> instead of just <cfg.name>
+	if cfg.bucket != "" {
+		cfg.name = filepath.Join("/tmp", cfg.name)
+	}
+
 	return cfg
 }
 

@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
+## [v0.2.1] — 2025-04-30
+
+### ⚡ Improvements
+
+*   Added AES256 server-side encryption to the S3 upload.
+
+  [v0.2.1]: https://github.com/tembo-io/temback/compare/v0.2.0...v0.2.1
+
 ## [v0.2.0] — 2025-04-30
 
 ### ⚡ Improvements
@@ -19,7 +27,7 @@ All notable changes to this project will be documented in this file. It uses the
     `PGHOST` environment variables, while respecting those variables and
     options.
 
-  [v0.2.0]: https://github.com/tembo-io/temback/compare/v0.1.1...v0.2.1
+  [v0.2.0]: https://github.com/tembo-io/temback/compare/v0.1.1...v0.2.0
 
 ## [v0.1.1] — 2025-04-24
 

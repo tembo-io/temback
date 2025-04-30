@@ -355,11 +355,12 @@ func upload(cfg *backupConfig) error {
 	defer func() { _ = fh.Close() }()
 
 	if _, err := client.PutObject(context.Background(), &s3.PutObjectInput{
-		Bucket:            aws.String(cfg.bucket),
-		Key:               aws.String(cfg.UploadKey()),
-		Body:              fh,
-		ChecksumAlgorithm: types.ChecksumAlgorithmSha256,
-		ContentType:       aws.String("application/gzip"),
+		Bucket:               aws.String(cfg.bucket),
+		Key:                  aws.String(cfg.UploadKey()),
+		Body:                 fh,
+		ChecksumAlgorithm:    types.ChecksumAlgorithmSha256,
+		ServerSideEncryption: types.ServerSideEncryptionAes256,
+		ContentType:          aws.String("application/gzip"),
 	}); err != nil {
 		fmt.Println("Failed")
 		return err

@@ -17,6 +17,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/jackc/pgx/v5"
@@ -333,12 +334,11 @@ func upload(cfg *backupConfig) error {
 	file := cfg.Tarball()
 	fmt.Printf("Uploading %v...", file)
 
-	awsCfg, err := config.LoadDefaultConfig(context.TODO())
+	ctx := context.Background()
+	awsCfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return err
 	}
-	client := s3.NewFromConfig(awsCfg)
-	_ = client
 
 	root, err := os.OpenRoot(".")
 	if err != nil {
@@ -353,9 +353,14 @@ func upload(cfg *backupConfig) error {
 	}
 	defer func() { _ = fh.Close() }()
 
-	if _, err := client.PutObject(context.Background(), &s3.PutObjectInput{
+	// https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
+	client := s3.NewFromConfig(awsCfg)
+	uploader := manager.NewUploader(client)
+	key := cfg.UploadKey()
+
+	if _, err := uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket:               aws.String(cfg.bucket),
-		Key:                  aws.String(cfg.UploadKey()),
+		Key:                  aws.String(key),
 		Body:                 fh,
 		ChecksumAlgorithm:    types.ChecksumAlgorithmSha256,
 		ServerSideEncryption: types.ServerSideEncryptionAes256,
@@ -364,6 +369,17 @@ func upload(cfg *backupConfig) error {
 		fmt.Println("Failed")
 		return err
 	}
+	if err = s3.NewObjectExistsWaiter(client).Wait(
+		ctx, &s3.HeadObjectInput{
+			Bucket: aws.String(cfg.bucket),
+			Key:    aws.String(key),
+		},
+		time.Hour,
+	); err != nil {
+		fmt.Println("Failed")
+		return err
+	}
+
 	fmt.Println("Success")
 	return nil
 }

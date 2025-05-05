@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
+## [v0.2.2] — 2025-05-05
+
+### ⚡ Improvements
+
+*   Use alpine for base image
+
+  [v0.2.1]: https://github.com/tembo-io/temback/compare/v0.2.1...v0.2.2
+
 ## [v0.2.1] — 2025-04-30
 
 ### ⚡ Improvements

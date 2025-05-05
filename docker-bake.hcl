@@ -23,7 +23,8 @@ target "default" {
   platforms = ["linux/amd64", "linux/arm64"]
   context = "."
   dockerfile-inline = <<EOT
-  FROM scratch
+  FROM alpine:3.21
+  RUN apk update && apk add --no-cache ca-certificates postgresql-client
   ARG TARGETOS TARGETARCH
   COPY _build/$${TARGETOS}-$${TARGETARCH}/temback ./temback
   ENTRYPOINT ["/temback"]

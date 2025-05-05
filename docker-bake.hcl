@@ -26,8 +26,8 @@ target "default" {
   FROM alpine:3.21
   RUN apk update && apk add --no-cache ca-certificates postgresql-client
   ARG TARGETOS TARGETARCH
-  COPY _build/$${TARGETOS}-$${TARGETARCH}/temback ./temback
-  ENTRYPOINT ["/temback"]
+  COPY _build/$${TARGETOS}-$${TARGETARCH}/temback /usr/local/bin/temback
+  ENTRYPOINT ["/usr/local/bin/temback"]
   CMD ["--version"]
   EOT
   tags = [

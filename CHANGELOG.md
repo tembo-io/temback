@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
+## [v0.2.4] — 2025-05-05
+
+### ⚡ Improvements
+
+*   Always build a static binary. Fixes the OCI image on AMD64.
+
+  [v0.2.4]: https://github.com/tembo-io/temback/compare/v0.2.3...v0.2.4
+
 ## [v0.2.3] — 2025-05-05
 
 ### ⚡ Improvements

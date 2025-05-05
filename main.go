@@ -233,7 +233,6 @@ func dump(cfg *backupConfig, info *dbInfo) error {
 		)
 	}
 
-	// Assemble job environment variables.
 	// Start the jobs.
 	ch := make(chan Job)
 	for _, job := range jobs {

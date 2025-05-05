@@ -2,7 +2,7 @@ GO       ?= go
 GOOS     ?= $(word 1,$(subst /, ,$(word 4, $(shell $(GO) version))))
 GOARCH   ?= $(word 2,$(subst /, ,$(word 4, $(shell $(GO) version))))
 PLATFORM := $(GOOS)-$(GOARCH)
-VERSION  := v0.2.3
+VERSION  := v0.2.4
 REVISION := $(shell git rev-parse --short HEAD)
 REGISTRY ?= localhost:5001
 ldflags = -ldflags="-s -w -X 'main.version=$(VERSION)' -X 'main.build=$(REVISION)'"
@@ -13,7 +13,7 @@ ldflags = -ldflags="-s -w -X 'main.version=$(VERSION)' -X 'main.build=$(REVISION
 temback: _build/$(PLATFORM)/temback
 
 _build/%/temback: main.go go.* template.md
-	GOOS=$(word 1,$(subst -, ,$*)) GOARCH=$(word 2,$(subst -, ,$*)) $(GO) build $(ldflags) -o $@ ./$<
+	GOOS=$(word 1,$(subst -, ,$*)) GOARCH=$(word 2,$(subst -, ,$*)) CGO_ENABLED=0 $(GO) build $(ldflags) -o $@ ./$<
 
 run: _build/$(PLATFORM)/temback
 	@./_build/$(PLATFORM)/temback --version

@@ -21,18 +21,23 @@ url = "https://github.com/tembo-io/temback"
 
 target "default" {
   platforms = ["linux/amd64", "linux/arm64"]
+  matrix = {
+    pgv = ["17", "16", "15", "14"]
+  }
+  name = "temback-${pgv}"
   context = "."
   dockerfile-inline = <<EOT
-  FROM alpine:3.21
-  RUN apk update && apk add --no-cache ca-certificates postgresql-client
+  FROM quay.io/tembo/ubuntu:24.04
+  ADD https://salsa.debian.org/postgresql/postgresql-common/-/raw/master/pgdg/apt.postgresql.org.sh .
+  RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && chmod +x apt.postgresql.org.sh && ./apt.postgresql.org.sh -p -y && rm apt.postgresql.org.sh && apt-get install -y --no-install-recommends postgresql-client-${pgv} && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/* /usr/share/postgresql/${pgv}/man
   ARG TARGETOS TARGETARCH
   COPY _build/$${TARGETOS}-$${TARGETARCH}/temback /usr/local/bin/temback
   ENTRYPOINT ["/usr/local/bin/temback"]
   CMD ["--version"]
   EOT
   tags = [
-    "${registry}/temback:latest",
-    "${registry}/temback:${version}",
+    "${registry}/temback:latest-pg${pgv}",
+    "${registry}/temback:${version}-pg${pgv}",
   ]
   annotations = [
     "index,manifest:org.opencontainers.image.created=${now}",

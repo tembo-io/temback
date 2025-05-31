@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
+## [v0.3.1] — 2025-05-30
+
+### ⚡ Improvements
+
+*   Created separate Ubuntu-based Docker images for PostgreSQL versions 14-17.
+
+  [v0.3.1]: https://github.com/tembo-io/temback/compare/v0.3.0...v0.3.1
+
 ## [v0.3.0] — 2025-05-05
 
 ### ⚡ Improvements

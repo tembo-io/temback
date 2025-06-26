@@ -67,9 +67,10 @@ Options
 *   `--bucket`: Upload to the named S3 bucket
 *   `--dir`: Upload to the named S3 subdirectory
 *   `--compress`: Compress into a tarball (ignored with `--bucket`)
-*   `--host`: The Postgres host name; defaults to `PGHOST` if set
-*   `--user`: The Postgres username; defaults to `PGUSER` if set
+*   `--host`: The Postgres host name; defaults to `$PGHOST` if set
+*   `--user`: The Postgres username; defaults to `$PGUSER` if set
 *   `--pass`: The Postgres password; defaults to `$PGPASSWORD` (preferred)
+*   `--dbname`: Alternative default database
 *   `--text`: Dump plain text mode; defaults to directory mode
 *   `--clean`: Delete temporary files
 

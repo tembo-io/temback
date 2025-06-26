@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
+## [v0.4.0] — 2025-06-26
+
+### ⚡ Improvements
+
+- Added the `--dbname` option to specify the default database to connect to.
+
+[v0.4.0]: https://github.com/tembo-io/temback/compare/v0.3.1...v0.4.0
+
 ## [v0.3.1] — 2025-05-30
 
 ### ⚡ Improvements

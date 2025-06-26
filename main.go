@@ -57,6 +57,7 @@ func main() {
 type backupConfig struct {
 	name     string
 	host     string
+	dbname   string
 	user     string
 	pass     string
 	bucket   string
@@ -106,6 +107,7 @@ func (c *backupConfig) ConnString() string {
 		"user":     c.user,
 		"password": c.pass,
 		"host":     c.host,
+		"database": c.dbname,
 	} {
 		if v != "" {
 			params = append(params, k+"="+v)
@@ -118,6 +120,7 @@ func newConfig() *backupConfig {
 	cfg := &backupConfig{time: time.Now().UTC()}
 	flag.StringVar(&cfg.name, "name", "", "Backup name")
 	flag.StringVar(&cfg.host, "host", "", "Database host name")
+	flag.StringVar(&cfg.dbname, "dbname", "", "Alternative default database")
 	flag.StringVar(&cfg.user, "user", "", "Database username")
 	flag.StringVar(&cfg.pass, "pass", "", "Database password")
 	flag.StringVar(&cfg.bucket, "bucket", "", "S3 bucket name")
@@ -186,7 +189,7 @@ func getDBInfo(cfg *backupConfig) (*dbInfo, error) {
 
 func dump(cfg *backupConfig, info *dbInfo) error {
 	fmt.Printf("Backing up to %v\n", cfg.name)
-	const dirMode = 0750
+	const dirMode = 0o750
 	if err := os.MkdirAll(cfg.name, dirMode); err != nil {
 		return err
 	}
@@ -203,8 +206,8 @@ func dump(cfg *backupConfig, info *dbInfo) error {
 	for _, g := range globals {
 		// #nosec G204
 		jobs = append(jobs, Job{name: g, cmd: exec.Command(
-			"pg_dumpall", "-r", "-f", path.Join(cfg.name, g+".sql")),
-		})
+			"pg_dumpall", "-r", "-f", path.Join(cfg.name, g+".sql"),
+		)})
 	}
 
 	// Setup args according to configuration.

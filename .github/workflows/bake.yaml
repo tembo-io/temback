@@ -47,8 +47,3 @@ jobs:
           REGISTRY: quay.io/tembo
           PUSH: ${{ startsWith(github.ref, 'refs/tags') }}
         run: make image
-      - name: Build${{ startsWith(github.ref, 'refs/tags') && ' and Push to ECR' || '' }}
-        env:
-          REGISTRY: ${{ secrets.ECR_REGISTRY }}
-          PUSH: ${{ startsWith(github.ref, 'refs/tags') }}
-        run: make image

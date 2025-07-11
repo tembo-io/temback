@@ -1,6 +1,6 @@
 # Variables to be specified externally.
 variable "registry" {
-  default = "quay.io/tembo"
+  default = "ghcr.io/theory"
   description = "The image registry."
 }
 
@@ -16,8 +16,8 @@ variable "revision" {
 
 # Values to use in the targets.
 now = timestamp()
-authors = "Tembo"
-url = "https://github.com/tembo-io/temback"
+authors = "David E. Wheeler"
+url = "https://github.com/theory/temback"
 
 target "default" {
   platforms = ["linux/amd64", "linux/arm64"]
@@ -27,7 +27,7 @@ target "default" {
   name = "temback-${pgv}"
   context = "."
   dockerfile-inline = <<EOT
-  FROM quay.io/tembo/ubuntu:24.04
+  FROM ubuntu:24.04
   ADD https://salsa.debian.org/postgresql/postgresql-common/-/raw/master/pgdg/apt.postgresql.org.sh .
   RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && chmod +x apt.postgresql.org.sh && ./apt.postgresql.org.sh -p -y && rm apt.postgresql.org.sh && apt-get install -y --no-install-recommends postgresql-client-${pgv} && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/* /usr/share/postgresql/${pgv}/man
   ARG TARGETOS TARGETARCH

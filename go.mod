@@ -1,4 +1,4 @@
-module github.com/tembo-io/temback
+module github.com/theory/temback
 
 go 1.24.0
 

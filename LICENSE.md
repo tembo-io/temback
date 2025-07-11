@@ -1,6 +1,7 @@
 The PostgreSQL License
 
-Copyright (c) 2025, Tembo
+Portions Copyright (c) 2025, David E. Wheeler and Tembo
+Portions Copyright (c) 2025, Tembo
 
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose, without fee, and without a written agreement is

@@ -7,13 +7,24 @@ All notable changes to this project will be documented in this file. It uses the
   [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
     "Semantic Versioning 2.0.0"
 
+## [v0.5.0] — 2025-07-11
+
+### 🏗️ Build and Distribution
+
+*   Moved from the Tembo GitHub account and Quay registry to the [theory]
+    account and [GHCR].
+
+  [v0.5.0]: https://github.com/theory/temback/compare/v0.4.0...v0.5.0
+  [theory]: https://github.com/theory/temback
+  [GHCR]: https://ghcr.io/theory/temback
+
 ## [v0.4.0] — 2025-06-26
 
 ### ⚡ Improvements
 
 - Added the `--dbname` option to specify the default database to connect to.
 
-[v0.4.0]: https://github.com/tembo-io/temback/compare/v0.3.1...v0.4.0
+[v0.4.0]: https://github.com/theory/temback/compare/v0.3.1...v0.4.0
 
 ## [v0.3.1] — 2025-05-30
 
@@ -21,7 +32,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Created separate Ubuntu-based Docker images for PostgreSQL versions 14-17.
 
-  [v0.3.1]: https://github.com/tembo-io/temback/compare/v0.3.0...v0.3.1
+  [v0.3.1]: https://github.com/theory/temback/compare/v0.3.0...v0.3.1
 
 ## [v0.3.0] — 2025-05-05
 
@@ -33,7 +44,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Updated all dependencies.
 
-  [v0.3.0]: https://github.com/tembo-io/temback/compare/v0.2.4...v0.3.0
+  [v0.3.0]: https://github.com/theory/temback/compare/v0.2.4...v0.3.0
 
 ## [v0.2.4] — 2025-05-05
 
@@ -41,7 +52,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Always build a static binary. Fixes the OCI image on AMD64.
 
-  [v0.2.4]: https://github.com/tembo-io/temback/compare/v0.2.3...v0.2.4
+  [v0.2.4]: https://github.com/theory/temback/compare/v0.2.3...v0.2.4
 
 ## [v0.2.3] — 2025-05-05
 
@@ -49,7 +60,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Install temback binary into PATH in the OCI image.
 
-  [v0.2.3]: https://github.com/tembo-io/temback/compare/v0.2.2...v0.2.3
+  [v0.2.3]: https://github.com/theory/temback/compare/v0.2.2...v0.2.3
 
 ## [v0.2.2] — 2025-05-05
 
@@ -57,7 +68,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Use alpine for base image
 
-  [v0.2.2]: https://github.com/tembo-io/temback/compare/v0.2.1...v0.2.2
+  [v0.2.2]: https://github.com/theory/temback/compare/v0.2.1...v0.2.2
 
 ## [v0.2.1] — 2025-04-30
 
@@ -65,7 +76,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Added AES256 server-side encryption to the S3 upload.
 
-  [v0.2.1]: https://github.com/tembo-io/temback/compare/v0.2.0...v0.2.1
+  [v0.2.1]: https://github.com/theory/temback/compare/v0.2.0...v0.2.1
 
 ## [v0.2.0] — 2025-04-30
 
@@ -79,7 +90,7 @@ All notable changes to this project will be documented in this file. It uses the
     `PGHOST` environment variables, while respecting those variables and
     options.
 
-  [v0.2.0]: https://github.com/tembo-io/temback/compare/v0.1.1...v0.2.0
+  [v0.2.0]: https://github.com/theory/temback/compare/v0.1.1...v0.2.0
 
 ## [v0.1.1] — 2025-04-24
 
@@ -92,7 +103,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Fixed the name of the file uploaded to S3 to end in `.tar.gz`.
 
-  [v0.1.1]: https://github.com/tembo-io/temback/compare/v0.1.0...v0.1.1
+  [v0.1.1]: https://github.com/theory/temback/compare/v0.1.0...v0.1.1
 
 ## [v0.1.0] — 2025-04-22
 
@@ -117,10 +128,10 @@ All notable changes to this project will be documented in this file. It uses the
 
 *   Build and install docs in the [README]
 
-  [v0.1.0]: https://github.com/tembo-io/temback/compare/feec925...v0.1.0
+  [v0.1.0]: https://github.com/theory/temback/compare/feec925...v0.1.0
   [depesz backup pattern]: https://www.depesz.com/2019/12/10/how-to-effectively-dump-postgresql-databases/
   [`pg_dump`]: https://www.postgresql.org/docs/current/app-pgdump.html
   [`pg_dumpall`]: https://www.postgresql.org/docs/current/app-pg-dumpall.html
-  [GitHub]: https://github.com/tembo-io/temback/releases
-  [OCI image]: https://quay.io/tembo/temback
-  [README]: https://github.com/tembo-io/temback/blob/v0.1.0/README.md
+  [GitHub]: https://github.com/theory/temback/releases
+  [OCI image]: https://quay.io/github.com/theory/temback
+  [README]: https://github.com/theory/temback/blob/v0.1.0/README.md
